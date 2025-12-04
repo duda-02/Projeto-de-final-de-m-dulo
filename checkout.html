@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <title>Checkout</title>
+  <style>
+    body { padding: 20px; }
+    .checkout-container { max-width: 600px; margin: auto; }
+    .checkout-container h2 { margin-bottom: 20px; }
+    .checkout-container ul { list-style: none; padding: 0; margin-bottom: 20px; }
+    .checkout-container li { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #ccc; }
+    .checkout-container input, .checkout-container select, .checkout-container button { margin-bottom: 10px; }
+    .button-finalizar { background-color: rgb(66, 0, 128); color: rgb(212, 195, 195); width: 100%; }
+    #qrCode { display: block; margin: 10px auto; max-width: 200px; }
+  </style>
+</head>
+<body>
+
+<div class="checkout-container">
+  <h2>Resumo da Compra</h2>
+  <ul id="resumoCarrinho"></ul>
+  <p>Total: Kz <span id="totalCompra">0.00</span></p>
+
+  <h3>Informações do Cliente</h3>
+  <input type="text" id="nomeCliente" placeholder="Nome completo" class="form-control">
+  <input type="email" id="emailCliente" placeholder="E-mail" class="form-control">
+  <input type="text" id="enderecoCliente" placeholder="Endereço de entrega" class="form-control">
+
+  <h3>Método de Entrega</h3>
+  <select id="metodoEntrega" class="form-control">
+    <option value="">Selecione a entrega</option>
+    <option value="padrao">Padrão</option>
+    <option value="expresso">Expresso</option>
+  </select>
+
+            <div class="frete-box">
+    <h3>Calcular Frete</h3>
+
+    <div class="frete-inputs">
+        <input type="text" id="cepInput" placeholder="Digite seu CEP">
+        <button onclick="calcularFrete()">Calcular</button>
+    </div>
+
+    <p id="resultadoFrete"></p>
+</div>
+
+  <h3>Pagamento</h3>
+  <select id="metodoPagamento" class="form-control" onchange="atualizarCamposPagamento()">
+    <option value="">Selecione o método de pagamento</option>
+    <option value="cartao_credito">Cartão de Crédito</option>
+    <option value="cartao_debito">Cartão de Débito</option>
+    <option value="pix">Pix</option>
+    <option value="boleto">Boleto Bancário</option>
+  </select>
+
+  <div id="camposCartao" style="display:none;">
+    <input type="text" id="cartaoCliente" placeholder="Número do cartão" class="form-control">
+    <input type="text" id="validadeCartao" placeholder="Validade" class="form-control">
+    <input type="text" id="cvvCartao" placeholder="CVV" class="form-control">
+
+    <label for="parcelas">Parcelamento</label>
+    <select id="parcelas" class="form-control"></select>
+  </div>
+
+  <div id="camposPix" style="display:none;">
+    <p>Use o QR code abaixo para efetuar o pagamento via Pix:</p>
+    <img id="qrCode" src="" alt="QR Code Pix">
+    <button type="button" onclick="gerarQR()">Gerar QR Code</button>
+  </div>
+
+  <div id="camposBoleto" style="display:none;">
+    <p>O boleto será gerado após a confirmação do pedido.</p>
+  </div>
+
+  <button onclick="concluirCompra()" class="button-finalizar">Concluir Compra</button>
+  <button onclick="window.location.href='index.html'" class="button-finalizar" style="margin-top:10px; background-color: gray;">Voltar à Loja</button>
+</div>
+
+<script>
+  let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+  let total = parseFloat(localStorage.getItem('total')) || 0.00;
+
+  const resumoCarrinho = document.getElementById('resumoCarrinho');
+  const totalCompra = document.getElementById('totalCompra');
+  totalCompra.textContent = total.toFixed(3);
+
+  carrinho.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = `${item.nome} - Kz ${item.preco.toFixed(3)} x ${item.quantidade}`;
+      resumoCarrinho.appendChild(li);
+  });
+
+  function atualizarCamposPagamento() {
+    const metodo = document.getElementById('metodoPagamento').value;
+    const camposCartao = document.getElementById('camposCartao');
+    document.getElementById('camposPix').style.display = metodo === 'pix' ? 'block' : 'none';
+    document.getElementById('camposBoleto').style.display = metodo === 'boleto' ? 'block' : 'none';
+    camposCartao.style.display = (metodo === 'cartao_credito' || metodo === 'cartao_debito') ? 'block' : 'none';
+
+    if (metodo === 'cartao_credito') {
+      atualizarParcelas();
+    }
+
+    if(metodo === 'pix') gerarQR(); // gera QR ao selecionar Pix
+  }
+
+  function atualizarParcelas() {
+    const select = document.getElementById('parcelas');
+    select.innerHTML = ''; // limpa opções anteriores
+    const juros = 0.02; // 2% ao mês para parcelas acima de 3x
+
+    for (let i = 1; i <= 12; i++) {
+      let valorParcela = total;
+      let texto = '';
+
+      if (i <= 3) {
+        valorParcela = total / i;
+        texto = `${i}x sem juros de Kz ${valorParcela.toFixed(4)}`;
+      } else {
+        // cálculo com juros compostos
+        valorParcela = (total * Math.pow(1 + juros, i)) / i;
+        texto = `${i}x com juros de Kz ${valorParcela.toFixed(4)}`;
+      }
+
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = texto;
+      select.appendChild(option);
+    }
+  }
+
+  function gerarQR() {
+    const valorPix = total.toFixed(2);
+    const chavePix = "meuemail@exemplo.com";
+    const textoQR = `PIX:${chavePix};VALOR:${valorPix};`;
+    const qrImg = document.getElementById('qrCode');
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(textoQR)}`;
+  }
+
+  function concluirCompra() {
+      const nome = document.getElementById('nomeCliente').value;
+      const email = document.getElementById('emailCliente').value;
+      const endereco = document.getElementById('enderecoCliente').value;
+      const entrega = document.getElementById('metodoEntrega').value;
+      const pagamento = document.getElementById('metodoPagamento').value;
+
+      if (!nome || !email || !endereco || !entrega || !pagamento) {
+          alert('Por favor, preencha todos os dados e selecione método de entrega e pagamento!');
+          return;
+      }
+
+      if (pagamento === 'cartao_credito' || pagamento === 'cartao_debito') {
+          const numero = document.getElementById('cartaoCliente').value;
+          const validade = document.getElementById('validadeCartao').value;
+          const cvv = document.getElementById('cvvCartao').value;
+          if (!numero || !validade || !cvv) {
+              alert('Por favor, preencha os dados do cartão!');
+              return;
+          }
+
+          const parcelas = document.getElementById('parcelas').value;
+          alert(`Compra concluída com sucesso!\nParcelamento: ${parcelas}x\nObrigado pela preferência.`);
+      } else {
+          alert('Compra concluída com sucesso!\nObrigado pela preferência.');
+      }
+
+      localStorage.removeItem('carrinho');
+      localStorage.removeItem('total');
+      window.location.href = "index.html";
+  }
+
+  // Atualiza parcelas inicialmente caso já tenha selecionado cartão
+  atualizarParcelas();
+
+// Cálculo de frete via API corrigido
+async function calcularFrete() {
+    const cep = document.getElementById("cepInput").value.replace(/\D/g, "");
+    const resultado = document.getElementById("resultadoFrete");
+
+    if (cep.length !== 8) {
+        resultado.innerHTML = "❌ CEP inválido (use 8 números)";
+        return;
+    }
+
+    resultado.innerHTML = "⏳ Calculando...";
+
+    try {
+
+        // 🔥 CORREÇÃO: faltavam ASPAS na URL
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const dados = await response.json();
+
+        if (dados.erro) {
+            resultado.innerHTML = "❌ CEP não encontrado";
+            return;
+        }
+
+        const estado = dados.uf;
+        let frete = 0;
+        let prazo = "7 a 12 dias úteis";
+
+        switch (estado) {
+            case "SP":
+            case "RJ":
+            case "MG":
+            case "ES":
+                frete = 45.50;
+                prazo = "3 a 7 dias úteis";
+                break;
+
+            case "PR":
+            case "SC":
+            case "RS":
+                frete = 57.50;
+                prazo = "4 a 8 dias úteis";
+                break;
+
+            case "BA":
+            case "PE":
+            case "CE":
+            case "PB":
+            case "RN":
+            case "MA":
+            case "PI":
+            case "AL":
+                frete = 16.90;
+                prazo = "6 a 10 dias úteis";
+                break;
+
+            default:
+                frete = 100.00;
+                prazo = "7 a 12 dias úteis";
+        }
+
+        resultado.innerHTML = `
+            📦 <strong>Frete:</strong> R$ ${frete.toFixed(2)} <br>
+            ⏰ <strong>Prazo:</strong> ${prazo} <br>
+            🏙️ ${dados.localidade} - ${dados.uf}
+        `;
+
+    } catch (erro) {
+        resultado.innerHTML = "❌ Erro ao consultar CEP";
+        console.log(erro);
+    }
+}
+
+
+</script>
+
+</body>
+</html>

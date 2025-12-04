@@ -1,0 +1,162 @@
+body {
+    background: linear-gradient(90deg, #1d0030, #4b007e, #8b2cff);
+    min-height: 100vh;
+    padding: 40px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+}
+
+/* CARD CENTRAL */
+.checkout-container {
+    background: #ffffff;
+    width: 100%;
+    max-width: 550px;
+    padding: 35px 35px 45px;
+    border-radius: 22px;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.35);
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* TÍTULOS */
+.checkout-container h2,
+.checkout-container h3,
+.checkout-container p:first-of-type {
+    color: #4b007e;
+    font-weight: 700;
+}
+
+.checkout-container h3 {
+    margin-top: 25px;
+    margin-bottom: 12px;
+    font-size: 22px;
+}
+
+.checkout-container p {
+    font-size: 17px;
+    margin-bottom: 15px;
+}
+
+/* LISTA DOS PRODUTOS */
+.checkout-container ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 15px;
+    background: #f8f8f8;
+    border-radius: 12px;
+    padding: 12px 15px;
+}
+
+.checkout-container li {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #ddd;
+    font-size: 15px;
+}
+
+.checkout-container li:last-child {
+    border-bottom: none;
+}
+
+/* INPUTS */
+.checkout-container input {
+    background: #f2f2f2;
+    border: 2px solid transparent;
+    padding: 13px 15px;
+    font-size: 15px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    transition: .25s;
+}
+
+.checkout-container input:focus {
+    background: #ffffff;
+    border-color: #8b2cff;
+    box-shadow: 0 0 8px rgba(139,44,255,0.4);
+}
+
+/* BOTÃO FINALIZAR */
+.button-finalizar {
+    background-color: #4b007e !important;
+    color: #ffffff !important;
+    border: none;
+    padding: 14px 0;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: 0.25s ease-out;
+}
+
+.button-finalizar:hover {
+    background-color: #35005f !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(75,0,126,0.35);
+}
+
+/* TEXTO TOTAL */
+#totalCompra {
+    font-weight: bold;
+    color: #4b007e;
+    font-size: 18px;
+}
+
+
+/* caixa de frete */
+
+.frete-box {
+    width: 100%;
+    max-width: 400px;
+    padding: 15px;
+    background: #f7f7fc;
+    border: 1px solid #c9c9d4;
+    border-radius: 12px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    margin-top: 20px;
+}
+
+.frete-box h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.frete-inputs {
+    display: flex;
+    gap: 5px;
+}
+
+.frete-box input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #7a5ba8;
+    border-radius: 6px;
+}
+
+.frete-box button {
+    padding: 8px 12px;
+    background: #55228a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.frete-box button:hover {
+    background: #6f35b8;
+}
+
+#resultadoFrete {
+    margin-top: 10px;
+    font-size: 15px;
+}
+
+
+
